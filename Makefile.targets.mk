@@ -54,19 +54,19 @@ build-linux-amd64: bin/linux/amd64/envoy-gateway
 build-linux-arm64: bin/linux/arm64/envoy-gateway
 build-all: build-linux-amd64 build-linux-arm64
 bin/%/envoy-gateway: FORCE
-	@CGO_ENABLED=0 GOOS=$(word 1,$(subst /, ,$*)) GOARCH=$(word 2,$(subst /, ,$*)) go build -o $@ github.com/envoyproxy/gateway/cmd/envoy-gateway
+	CGO_ENABLED=0 GOOS=$(word 1,$(subst /, ,$*)) GOARCH=$(word 2,$(subst /, ,$*)) go build -o $@ github.com/envoyproxy/gateway/cmd/envoy-gateway
 
 .PHONY: test
 test:
-	@go test ./...
+	go test ./...
 
 .PHONY: docker-build
 docker-build: build-all ## Build the envoy-gateway docker image.
-	@DOCKER_BUILDKIT=1 docker build -t $(IMAGE):$(TAG) -f Dockerfile bin
+	DOCKER_BUILDKIT=1 docker build -t $(IMAGE):$(TAG) -f Dockerfile bin
 
 .PHONY: docker-push
 docker-push: ## Push the docker image for envoy-gateway.
-	@docker push $(IMAGE):$(TAG)
+	docker push $(IMAGE):$(TAG)
 
 .PHONY: lint
 lint: ## Run lint checks
@@ -75,18 +75,18 @@ lint: lint-golint lint-yamllint lint-codespell
 .PHONY: lint-golint
 lint-golint:
 	@echo Running Go linter ...
-	@golangci-lint run --build-tags=e2e --config=tools/golangci-lint/.golangci.yml
+	golangci-lint run --build-tags=e2e --config=tools/golangci-lint/.golangci.yml
 
 .PHONY: lint-yamllint
 lint-yamllint:
 	@echo Running YAML linter ...
 	## TODO(lianghao208): add other directories later
-	@yamllint --config-file=tools/yamllint/.yamllint changelogs/
+	yamllint --config-file=tools/yamllint/.yamllint changelogs/
 
 .PHONY: lint-codespell
 lint-codespell: CODESPELL_SKIP := $(shell cat tools/codespell/.codespell.skip | tr \\n ',')
 lint-codespell:
-	@codespell --skip $(CODESPELL_SKIP) --ignore-words tools/codespell/.codespell.ignorewords --check-filenames --check-hidden -q2
+	codespell --skip $(CODESPELL_SKIP) --ignore-words tools/codespell/.codespell.ignorewords --check-filenames --check-hidden -q2
 
 ##@ Development
 
