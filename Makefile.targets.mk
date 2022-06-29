@@ -48,17 +48,13 @@ help: ## Display this help
 
 ##@ Build
 
-.PHONY: build
-build:  ## Build the envoy-gateway binary
-	@CGO_ENABLED=0 go build -a -o ./bin/${GOOS}/${GOARCH}/ github.com/envoyproxy/gateway/cmd/envoy-gateway
-
-build-linux-amd64:
-	@GOOS=linux GOARCH=amd64 $(MAKE) build
-
-build-linux-arm64:
-	@GOOS=linux GOARCH=arm64 $(MAKE) build
-
+.PHONY: build build-linux-amd64 build-linux-arm64 build-all
+build: bin/${GOOS}/${GOARCH}/envoy-gateway ## Build the envoy-gateway binary
+build-linux-amd64: bin/linux/amd64/envoy-gateway
+build-linux-arm64: bin/linux/arm64/envoy-gateway
 build-all: build-linux-amd64 build-linux-arm64
+bin/%/envoy-gateway: FORCE
+	@CGO_ENABLED=0 GOOS=$(word 1,$(subst /, ,$*)) GOARCH=$(word 2,$(subst /, ,$*)) go build -o $@ github.com/envoyproxy/gateway/cmd/envoy-gateway
 
 .PHONY: test
 test:
@@ -151,3 +147,5 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+.PHONY: FORCE
