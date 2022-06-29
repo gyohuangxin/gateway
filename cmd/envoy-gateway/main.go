@@ -15,8 +15,8 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"fmt"
 
 	"github.com/envoyproxy/gateway/internal/cmd"
 )

@@ -2,6 +2,8 @@
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 
+# nescessary
+
 # Docker variables
 # REGISTRY is the image registry to use for build and push image targets.
 REGISTRY ?= docker.io/envoyproxy
