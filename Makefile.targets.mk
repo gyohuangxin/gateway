@@ -72,10 +72,11 @@ docker-push: ## Push the docker image for envoy-gateway.
 lint: ## Run lint checks
 lint: lint-golint lint-yamllint lint-codespell
 
+GOLANGCI_LINT_FLAGS ?= $(if $(GITHUB_ACTION),--out-format=github-actions)
 .PHONY: lint-golint
 lint-golint:
 	@echo Running Go linter ...
-	golangci-lint run --build-tags=e2e --config=tools/golangci-lint/.golangci.yml
+	golangci-lint run $(GOLANGCI_LINT_FLAGS) --build-tags=e2e --config=tools/golangci-lint/.golangci.yml
 
 .PHONY: lint-yamllint
 lint-yamllint:
@@ -83,10 +84,26 @@ lint-yamllint:
 	## TODO(lianghao208): add other directories later
 	yamllint --config-file=tools/yamllint/.yamllint changelogs/
 
+CODESPELL_FLAGS ?= $(if $(GITHUB_ACTION),--disable-colors)
 .PHONY: lint-codespell
 lint-codespell: CODESPELL_SKIP := $(shell cat tools/codespell/.codespell.skip | tr \\n ',')
 lint-codespell:
-	codespell --skip $(CODESPELL_SKIP) --ignore-words tools/codespell/.codespell.ignorewords --check-filenames --check-hidden -q2
+# This ::add-matcher/::remove-matcher business is based on
+# https://github.com/codespell-project/actions-codespell/blob/2292753ad350451611cafcbabc3abe387491339a/entrypoint.sh
+# We do this here instead of just using
+# codespell-project/codespell-problem-matcher@v1 so that the matcher
+# doesn't apply to the other linters that `make lint` also runs.
+#
+# This recipe is written a little awkwardly with everything running in
+# one shell, this is because we want the ::remove-matcher lines to get
+# printed whether or not it finds complaints.
+	@PS4=; set -e; { \
+	  if test -n "$$GITHUB_ACTION"; then \
+	    printf '::add-matcher::$(CURDIR)/tools/codespell/matcher.json\n'; \
+	    trap "printf '::remove-matcher owner=codespell-matcher-default::\n::remove-matcher owner=codespell-matcher-specified::\n'" EXIT; \
+	  fi; \
+	  (set -x; codespell $(CODESPELL_FLAGS) --skip $(CODESPELL_SKIP) --ignore-words tools/codespell/.codespell.ignorewords --check-filenames --check-hidden -q2); \
+	}
 
 ##@ Development
 
