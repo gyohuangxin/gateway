@@ -1399,6 +1399,23 @@ _Appears in:_
 | `disableMergeSlashes` _boolean_ | DisableMergeSlashes allows disabling the default configuration of merging adjacent slashes in the path. Note that slash merging is not part of the HTTP spec and is provided for convenience. |
 
 
+#### PrivateKeyProvider
+
+
+
+BoringSSL private key method configuration. The private key methods are used for external (potentially asynchronous) signing and decryption operations. Some use cases for private key methods would be TPM support and TLS acceleration.
+
+_Appears in:_
+- [TLSSettings](#tlssettings)
+
+| Field | Description |
+| --- | --- |
+| `providerName` _string_ | Private key method provider name. The name must match a supported private key method provider type. |
+| `configType` _JSON_ | Private key method provider specific configuration. 
+ Types that are assignable to ConfigType: *PrivateKeyProvider_TypedConfig |
+| `fallback` _boolean_ | If the private key provider isn't available (eg. the required hardware capability doesn't existed), Envoy will fallback to the BoringSSL default implementation when the "fallback" is true. The default value is “false“. |
+
+
 #### ProviderType
 
 _Underlying type:_ `string`
@@ -2026,6 +2043,7 @@ _Appears in:_
 | `ecdhCurves` _string array_ | ECDHCurves specifies the set of supported ECDH curves. In non-FIPS Envoy Proxy builds the default curves are: - X25519 - P-256 In builds using BoringSSL FIPS the default curve is: - P-256 |
 | `signatureAlgorithms` _string array_ | SignatureAlgorithms specifies which signature algorithms the listener should support. |
 | `alpnProtocols` _[ALPNProtocol](#alpnprotocol) array_ | ALPNProtocols supplies the list of ALPN protocols that should be exposed by the listener. By default h2 and http/1.1 are enabled. Supported values are: - http/1.0 - http/1.1 - h2 |
+| `privateKeyProvider` _[PrivateKeyProvider](#privatekeyprovider)_ | BoringSSL private key method configuration. The private key methods are used for external (potentially asynchronous) signing and decryption operations. Some use cases for private key methods would be TPM support and TLS acceleration. |
 
 
 #### TLSVersion

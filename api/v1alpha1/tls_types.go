@@ -5,6 +5,8 @@
 
 package v1alpha1
 
+import v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
 // +kubebuilder:validation:XValidation:rule="has(self.minVersion) && self.minVersion == '1.3' ? !has(self.ciphers) : true", message="setting ciphers has no effect if the minimum possible TLS version is 1.3"
 // +kubebuilder:validation:XValidation:rule="has(self.minVersion) && has(self.maxVersion) ? {\"Auto\":0,\"1.0\":1,\"1.1\":2,\"1.2\":3,\"1.3\":4}[self.minVersion] <= {\"1.0\":1,\"1.1\":2,\"1.2\":3,\"1.3\":4,\"Auto\":5}[self.maxVersion] : !has(self.minVersion) && has(self.maxVersion) ? 3 <= {\"1.0\":1,\"1.1\":2,\"1.2\":3,\"1.3\":4,\"Auto\":5}[self.maxVersion] : true", message="minVersion must be smaller or equal to maxVersion"
 type TLSSettings struct {
@@ -62,6 +64,13 @@ type TLSSettings struct {
 	//
 	// +optional
 	ALPNProtocols []ALPNProtocol `json:"alpnProtocols,omitempty"`
+
+	// BoringSSL private key method configuration. The private key methods are used for external
+	// (potentially asynchronous) signing and decryption operations. Some use cases for private key
+	// methods would be TPM support and TLS acceleration.
+	//
+	// +optional
+	PrivateKeyProvider PrivateKeyProvider `json:"privateKeyProvider,omitempty"`
 }
 
 // ALPNProtocol specifies the protocol to be negotiated using ALPN
@@ -96,3 +105,24 @@ const (
 	// TLSv1.3 specifies TLS version 1.3
 	TLSv13 TLSVersion = "1.3"
 )
+
+// BoringSSL private key method configuration. The private key methods are used for external
+// (potentially asynchronous) signing and decryption operations. Some use cases for private key
+// methods would be TPM support and TLS acceleration.
+// +k8s:deepcopy-gen=true
+type PrivateKeyProvider struct {
+	// Private key method provider name. The name must match a
+	// supported private key method provider type.
+	ProviderName string `json:"providerName,omitempty"`
+
+	// Private key method provider specific configuration.
+	//
+	// Types that are assignable to ConfigType:
+	//	*PrivateKeyProvider_TypedConfig
+	ConfigType *v1.JSON `json:"configType,omitempty"`
+
+	// If the private key provider isn't available (eg. the required hardware capability doesn't existed),
+	// Envoy will fallback to the BoringSSL default implementation when the "fallback" is true.
+	// The default value is “false“.
+	Fallback bool `json:"fallback,omitempty"`
+}

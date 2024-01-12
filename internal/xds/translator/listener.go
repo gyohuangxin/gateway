@@ -451,6 +451,17 @@ func buildALPNProtocols(alpn []string) []string {
 	return alpn
 }
 
+func buildPrivateKeyProvider(privateKeyProvider *ir.PrivateKeyProvider) *tlsv3.PrivateKeyProvider {
+	if privateKeyProvider == nil {
+		return nil
+	}
+	return &tlsv3.PrivateKeyProvider{
+		ProviderName: privateKeyProvider.ProviderName,
+		ConfigType:   &tlsv3.PrivateKeyProvider_TypedConfig{},
+		Fallback:     privateKeyProvider.Fallback,
+	}
+}
+
 func buildXdsDownstreamTLSSecret(tlsConfig ir.TLSCertificate) *tlsv3.Secret {
 	// Build the tls secret
 	return &tlsv3.Secret{
@@ -462,6 +473,11 @@ func buildXdsDownstreamTLSSecret(tlsConfig ir.TLSCertificate) *tlsv3.Secret {
 				},
 				PrivateKey: &corev3.DataSource{
 					Specifier: &corev3.DataSource_InlineBytes{InlineBytes: tlsConfig.PrivateKey},
+				},
+				PrivateKeyProvider: &tlsv3.PrivateKeyProvider{
+					ProviderName: tlsConfig.PrivateKeyProvider.ProviderName,
+					ConfigType:   tlsConfig.PrivateKeyProvider.ConfigType,
+					Fallback:     tlsConfig.PrivateKeyProvider.Fallback,
 				},
 			},
 		},

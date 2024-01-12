@@ -254,6 +254,11 @@ const (
 	TLSv13 = TLSVersion(egv1a1.TLSv13)
 )
 
+// BoringSSL private key method configuration. The private key methods are used for external
+// (potentially asynchronous) signing and decryption operations. Some use cases for private key
+// methods would be TPM support and TLS acceleration.
+type PrivateKeyProvider egv1a1.PrivateKeyProvider
+
 // TLSConfig holds the configuration for downstream TLS context.
 // +k8s:deepcopy-gen=true
 type TLSConfig struct {
@@ -282,6 +287,8 @@ type TLSCertificate struct {
 	ServerCertificate []byte `json:"serverCertificate,omitempty" yaml:"serverCertificate,omitempty"`
 	// PrivateKey for the server.
 	PrivateKey []byte `json:"privateKey,omitempty" yaml:"privateKey,omitempty"`
+	// The private key methods are used for external (potentially asynchronous) signing and decryption operations
+	PrivateKeyProvider PrivateKeyProvider `json:"privateKeyProvider,omitempty" yaml:"privateKeyProvider,omitempty"`
 }
 
 func (t TLSCertificate) Validate() error {
