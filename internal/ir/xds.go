@@ -254,6 +254,8 @@ const (
 	TLSv13 = TLSVersion(egv1a1.TLSv13)
 )
 
+type PrivateKeyProvider egv1a1.PrivateKeyProvider
+
 // TLSConfig holds the configuration for downstream TLS context.
 // +k8s:deepcopy-gen=true
 type TLSConfig struct {
@@ -271,6 +273,8 @@ type TLSConfig struct {
 	SignatureAlgorithms []string `json:"signatureAlgorithms,omitempty" yaml:"signatureAlgorithms,omitempty"`
 	// ALPNProtocols exposed by this listener
 	ALPNProtocols []string `json:"alpnProtocols,omitempty" yaml:"alpnProtocols,omitempty"`
+	// PrivateKeyProvider is used for external (potentially asynchronous) signing and decryption operations
+	PrivateKeyProvider *PrivateKeyProvider `json:"privateKeyProvider,omitempty" yaml:"privateKeyProvider,omitempty"`
 }
 
 // TLSCertificate holds a single certificate's details

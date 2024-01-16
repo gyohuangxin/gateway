@@ -62,6 +62,13 @@ type TLSSettings struct {
 	//
 	// +optional
 	ALPNProtocols []ALPNProtocol `json:"alpnProtocols,omitempty"`
+
+	// BoringSSL private key method configuration. The private key methods are used for external
+	// (potentially asynchronous) signing and decryption operations. Some use cases for private key
+	// methods would be TPM support and TLS acceleration.
+	//
+	// +optional
+	PrivateKeyProvider *PrivateKeyProvider `json:"privateKeyProvider,omitempty"`
 }
 
 // ALPNProtocol specifies the protocol to be negotiated using ALPN
@@ -96,3 +103,27 @@ const (
 	// TLSv1.3 specifies TLS version 1.3
 	TLSv13 TLSVersion = "1.3"
 )
+
+// BoringSSL private key method configuration. The private key methods are used for external
+// (potentially asynchronous) signing and decryption operations. Some use cases for private key
+// methods would be TPM support and TLS acceleration.
+// +k8s:deepcopy-gen=true
+type PrivateKeyProvider struct {
+	// Private key method provider name. The name must match a
+	// supported private key method provider type.
+	ProviderName string `json:"providerName,omitempty"`
+
+	// How long to wait until the per-thread processing queue should be
+	// processed. If the processing queue gets full (eight sign or decrypt
+	// requests are received) it is processed immediately. However, if the
+	// queue is not filled before the delay has expired, the requests
+	// already in the queue are processed, even if the queue is not full.
+	// In effect, this value controls the balance between latency and
+	// throughput. The duration needs to be set to a value greater than or equal to 1 millisecond.
+	PollDelay int `json:"pollDelay,omitempty"`
+
+	// If the private key provider isn't available (eg. the required hardware capability doesn't existed),
+	// Envoy will fallback to the BoringSSL default implementation when the "fallback" is true.
+	// The default value is “false“.
+	Fallback bool `json:"fallback,omitempty"`
+}

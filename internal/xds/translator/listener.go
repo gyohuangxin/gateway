@@ -7,9 +7,11 @@ package translator
 
 import (
 	"errors"
+	"time"
 
 	xdscore "github.com/cncf/xds/go/xds/core/v3"
 	matcher "github.com/cncf/xds/go/xds/type/matcher/v3"
+	cryptomb "github.com/envoyproxy/go-control-plane/contrib/envoy/extensions/private_key_providers/cryptomb/v3alpha"
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listenerv3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	tls_inspectorv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/listener/tls_inspector/v3"
@@ -22,6 +24,7 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/envoyproxy/gateway/internal/ir"
@@ -451,7 +454,40 @@ func buildALPNProtocols(alpn []string) []string {
 	return alpn
 }
 
-func buildXdsDownstreamTLSSecret(tlsConfig ir.TLSCertificate) *tlsv3.Secret {
+func buildPrivateKeyProvider(privateKeyProvider *ir.PrivateKeyProvider) (*tlsv3.PrivateKeyProvider, error) {
+	if privateKeyProvider == nil {
+		return nil, nil
+	}
+	var typedConfig *anypb.Any
+	var err error
+	switch privateKeyProvider.ProviderName {
+	case "cryptomb":
+		if typedConfig, err = anypb.New(&cryptomb.CryptoMbPrivateKeyMethodConfig{
+			PollDelay: durationpb.New(time.Duration(privateKeyProvider.PollDelay) * time.Millisecond),
+		}); err != nil {
+			return nil, err
+		}
+	case "qat":
+		// TODO: qat config
+		return nil, errors.New("unsupported key provider type")
+	default:
+		// unsupported type
+		return nil, errors.New("unsupported key provider type")
+	}
+
+	return &tlsv3.PrivateKeyProvider{
+		ProviderName: privateKeyProvider.ProviderName,
+		ConfigType: &tlsv3.PrivateKeyProvider_TypedConfig{
+			TypedConfig: typedConfig,
+		},
+		Fallback: privateKeyProvider.Fallback,
+	}, nil
+
+}
+
+func buildXdsDownstreamTLSSecret(tlsConfig ir.TLSCertificate, privateKeyProvider *ir.PrivateKeyProvider) *tlsv3.Secret {
+	// TODO: error handling
+	pkp, _ := buildPrivateKeyProvider(privateKeyProvider)
 	// Build the tls secret
 	return &tlsv3.Secret{
 		Name: tlsConfig.Name,
@@ -463,6 +499,7 @@ func buildXdsDownstreamTLSSecret(tlsConfig ir.TLSCertificate) *tlsv3.Secret {
 				PrivateKey: &corev3.DataSource{
 					Specifier: &corev3.DataSource_InlineBytes{InlineBytes: tlsConfig.PrivateKey},
 				},
+				PrivateKeyProvider: pkp,
 			},
 		},
 	}
