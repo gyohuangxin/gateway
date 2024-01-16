@@ -12,6 +12,7 @@ import (
 	xdscore "github.com/cncf/xds/go/xds/core/v3"
 	matcher "github.com/cncf/xds/go/xds/type/matcher/v3"
 	cryptomb "github.com/envoyproxy/go-control-plane/contrib/envoy/extensions/private_key_providers/cryptomb/v3alpha"
+	qat "github.com/envoyproxy/go-control-plane/contrib/envoy/extensions/private_key_providers/qat/v3alpha"
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listenerv3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	tls_inspectorv3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/listener/tls_inspector/v3"
@@ -468,8 +469,11 @@ func buildPrivateKeyProvider(privateKeyProvider *ir.PrivateKeyProvider) (*tlsv3.
 			return nil, err
 		}
 	case "qat":
-		// TODO: qat config
-		return nil, errors.New("unsupported key provider type")
+		if typedConfig, err = anypb.New(&qat.QatPrivateKeyMethodConfig{
+			PollDelay: durationpb.New(time.Duration(privateKeyProvider.PollDelay) * time.Millisecond),
+		}); err != nil {
+			return nil, err
+		}
 	default:
 		// unsupported type
 		return nil, errors.New("unsupported key provider type")
