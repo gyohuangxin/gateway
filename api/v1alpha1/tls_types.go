@@ -5,7 +5,10 @@
 
 package v1alpha1
 
-import v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+import (
+	any1 "github.com/golang/protobuf/ptypes/any"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+)
 
 // +kubebuilder:validation:XValidation:rule="has(self.minVersion) && self.minVersion == '1.3' ? !has(self.ciphers) : true", message="setting ciphers has no effect if the minimum possible TLS version is 1.3"
 // +kubebuilder:validation:XValidation:rule="has(self.minVersion) && has(self.maxVersion) ? {\"Auto\":0,\"1.0\":1,\"1.1\":2,\"1.2\":3,\"1.3\":4}[self.minVersion] <= {\"1.0\":1,\"1.1\":2,\"1.2\":3,\"1.3\":4,\"Auto\":5}[self.maxVersion] : !has(self.minVersion) && has(self.maxVersion) ? 3 <= {\"1.0\":1,\"1.1\":2,\"1.2\":3,\"1.3\":4,\"Auto\":5}[self.maxVersion] : true", message="minVersion must be smaller or equal to maxVersion"
@@ -119,10 +122,18 @@ type PrivateKeyProvider struct {
 	//
 	// Types that are assignable to ConfigType:
 	//	*PrivateKeyProvider_TypedConfig
-	ConfigType *v1.JSON `json:"configType,omitempty"`
+	ConfigType isPrivateKeyProvider_ConfigType `json:"configType,omitempty"`
 
 	// If the private key provider isn't available (eg. the required hardware capability doesn't existed),
 	// Envoy will fallback to the BoringSSL default implementation when the "fallback" is true.
 	// The default value is “false“.
 	Fallback bool `json:"fallback,omitempty"`
 }
+
+type isPrivateKeyProvider_ConfigType v1.JSON
+
+type PrivateKeyProvider_TypedConfig struct {
+	TypedConfig *any1.Any
+}
+
+func (*PrivateKeyProvider_TypedConfig) isPrivateKeyProvider_ConfigType() {}

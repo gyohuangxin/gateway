@@ -1047,7 +1047,7 @@ _Appears in:_
 | --- | --- |
 | `op` _[JSONPatchOperationType](#jsonpatchoperationtype)_ | Op is the type of operation to perform |
 | `path` _string_ | Path is the location of the target document/field where the operation will be performed Refer to https://datatracker.ietf.org/doc/html/rfc6901 for more details. |
-| `value` _[JSON](#json)_ | Value is the new value of the path location. |
+| `value` _[isPrivateKeyProvider_ConfigType](#isprivatekeyprovider_configtype)_ | Value is the new value of the path location. |
 
 
 #### JSONPatchOperationType
@@ -1411,9 +1411,11 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `providerName` _string_ | Private key method provider name. The name must match a supported private key method provider type. |
-| `configType` _JSON_ | Private key method provider specific configuration. 
+| `configType` _[isPrivateKeyProvider_ConfigType](#isprivatekeyprovider_configtype)_ | Private key method provider specific configuration. 
  Types that are assignable to ConfigType: *PrivateKeyProvider_TypedConfig |
 | `fallback` _boolean_ | If the private key provider isn't available (eg. the required hardware capability doesn't existed), Envoy will fallback to the BoringSSL default implementation when the "fallback" is true. The default value is “false“. |
+
+
 
 
 #### ProviderType
